@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import com.davenet.sleeptracker.R
 import com.davenet.sleeptracker.database.SleepDatabase
 import com.davenet.sleeptracker.databinding.FragmentSleepTrackerBinding
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * A fragment with buttons to record start and end times for sleep, which are saved in
@@ -42,12 +43,23 @@ class SleepTrackerFragment : Fragment() {
 
         val sleepTrackerViewModel = ViewModelProvider(this, viewModelFactory).get(SleepTrackerViewModel::class.java)
 
-        sleepTrackerViewModel.navigateToSleepQuality.observe(viewLifecycleOwner, Observer { night ->
-            night?.let {
-                this.findNavController().navigate(SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepQualityFragment(night.nightId))
-                sleepTrackerViewModel.doneNavigating()
-            }
-        })
+
+        sleepTrackerViewModel.apply {
+            navigateToSleepQuality.observe(viewLifecycleOwner, Observer { night ->
+                night?.let {
+                    findNavController().navigate(SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepQualityFragment(night.nightId))
+                    sleepTrackerViewModel.doneNavigating()
+                }
+            })
+            showSnackbarEvent.observe(viewLifecycleOwner, Observer {
+                if (it == true) {
+                    Snackbar.make(requireActivity().findViewById(android.R.id.content),
+                    getString(R.string.cleared_message),
+                    Snackbar.LENGTH_SHORT).show()
+                    sleepTrackerViewModel.doneShowingSnackBar()
+                }
+            })
+        }
 
         binding.apply {
             lifecycleOwner = this@SleepTrackerFragment

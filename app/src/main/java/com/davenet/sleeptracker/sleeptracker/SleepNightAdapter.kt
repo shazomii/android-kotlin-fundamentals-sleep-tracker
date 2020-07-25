@@ -2,18 +2,13 @@ package com.davenet.sleeptracker.sleeptracker
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.davenet.sleeptracker.R
-import com.davenet.sleeptracker.convertDurationToFormatted
-import com.davenet.sleeptracker.convertNumericQualityToString
 import com.davenet.sleeptracker.database.SleepNight
 import com.davenet.sleeptracker.databinding.ListItemSleepNightBinding
 
-class SleepNightAdapter :
+class SleepNightAdapter(val clickListener: SleepNightListener):
     ListAdapter<SleepNight, SleepNightAdapter.ViewHolder>(SleepNightDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -21,15 +16,18 @@ class SleepNightAdapter :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        holder.bind(item)
+        holder.bind(getItem(position)!!, clickListener)
     }
 
     class ViewHolder private constructor(val binding: ListItemSleepNightBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(item: SleepNight) {
+        fun bind(
+            item: SleepNight,
+            clickListener: SleepNightListener
+        ) {
             binding.apply {
                 sleep = item
+                this.clickListener = clickListener
                 executePendingBindings()
             }
         }
@@ -52,4 +50,8 @@ class SleepNightDiffCallback : DiffUtil.ItemCallback<SleepNight>() {
     override fun areContentsTheSame(oldItem: SleepNight, newItem: SleepNight): Boolean {
         return oldItem == newItem
     }
+}
+
+class SleepNightListener(val clickListener: (sleepId: Long) -> Unit) {
+    fun onClick(night: SleepNight) = clickListener(night.nightId)
 }

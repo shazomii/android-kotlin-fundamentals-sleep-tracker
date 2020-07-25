@@ -47,7 +47,7 @@ class SleepTrackerFragment : Fragment() {
             ViewModelProvider(this, viewModelFactory).get(SleepTrackerViewModel::class.java)
 
         val adapter = SleepNightAdapter(SleepNightListener { nightId ->
-            Toast.makeText(context, "$nightId", Toast.LENGTH_SHORT).show()
+            sleepTrackerViewModel.onSleepNightClicked(nightId)
         })
 
         val manager = GridLayoutManager(activity, 3)
@@ -61,6 +61,14 @@ class SleepTrackerFragment : Fragment() {
                         )
                     )
                     sleepTrackerViewModel.doneNavigating()
+                }
+            })
+            navigateToSleepDetail.observe(viewLifecycleOwner, Observer { night ->
+                night?.let {
+                    findNavController().navigate(
+                        SleepTrackerFragmentDirections.actionSleepTrackerFragmentToSleepDetailFragment(night)
+                    )
+                    sleepTrackerViewModel.onSleepDetailNavigated()
                 }
             })
             showSnackbarEvent.observe(viewLifecycleOwner, Observer {

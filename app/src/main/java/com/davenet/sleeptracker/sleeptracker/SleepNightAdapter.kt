@@ -11,13 +11,18 @@ import com.davenet.sleeptracker.R
 import com.davenet.sleeptracker.database.SleepNight
 import com.davenet.sleeptracker.databinding.ListItemSleepNightBinding
 import com.davenet.sleeptracker.sleeptracker.SleepNightAdapter.ViewHolder.Companion.from
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.ClassCastException
 
 private val ITEM_VIEW_TYPE_HEADER = 0
 private val ITEM_VIEW_TYPE_ITEM = 1
 
-class SleepNightAdapter(val clickListener: SleepNightListener):
+class SleepNightAdapter(val clickListener: SleepNightListener) :
     ListAdapter<DataItem, RecyclerView.ViewHolder>(SleepNightDiffCallback()) {
+    private val adapterScope = CoroutineScope(Dispatchers.Default)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
@@ -28,11 +33,15 @@ class SleepNightAdapter(val clickListener: SleepNightListener):
     }
 
     fun addHeaderAndSubmitList(list: List<SleepNight>?) {
-        val items = when (list) {
-            null -> listOf(DataItem.Header)
-            else -> listOf(DataItem.Header) + list.map { DataItem.SleepNightItem(it) }
+        adapterScope.launch {
+            val items = when (list) {
+                null -> listOf(DataItem.Header)
+                else -> listOf(DataItem.Header) + list.map { DataItem.SleepNightItem(it) }
+            }
+            withContext(Dispatchers.Main) {
+                submitList(items)
+            }
         }
-        submitList(items)
     }
 
 
@@ -45,7 +54,7 @@ class SleepNightAdapter(val clickListener: SleepNightListener):
         }
     }
 
-    class TextViewHolder(view: View): RecyclerView.ViewHolder(view) {
+    class TextViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         companion object {
             fun from(parent: ViewGroup): TextViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
@@ -103,11 +112,11 @@ class SleepNightListener(val clickListener: (sleepId: Long) -> Unit) {
 sealed class DataItem {
     abstract val id: Long
 
-    data class SleepNightItem(val sleepNight: SleepNight): DataItem() {
+    data class SleepNightItem(val sleepNight: SleepNight) : DataItem() {
         override val id: Long = sleepNight.nightId
     }
 
-    object Header: DataItem() {
+    object Header : DataItem() {
         override val id: Long = Long.MIN_VALUE
     }
 }
